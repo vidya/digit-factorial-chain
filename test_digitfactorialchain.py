@@ -5,13 +5,13 @@ from digitfactorialchain.digitfactorialchain import ThreadCompute
 def test_1_basic():
     DigitFactorialChain.init_nums_computed()
 
-    t = DigitFactorialChain(169)
+    dfc = DigitFactorialChain(169)
 
-    t.start()
-    t.join()
+    dfc.start()
+    dfc.join()
 
     expected = 3
-    result = len(DigitFactorialChain.nums_computed)
+    result = dfc.fact_chain_len
 
     assert result == expected
 
@@ -19,13 +19,13 @@ def test_1_basic():
 def test_2_basic():
     DigitFactorialChain.init_nums_computed()
 
-    t = DigitFactorialChain(69)
+    dfc = DigitFactorialChain(69)
 
-    t.start()
-    t.join()
+    dfc.start()
+    dfc.join()
 
     expected = 5
-    result = len(DigitFactorialChain.nums_computed)
+    result = dfc.fact_chain_len
 
     assert result == expected
     assert True
@@ -34,13 +34,13 @@ def test_2_basic():
 def test_3_basic():
     DigitFactorialChain.init_nums_computed()
 
-    t = DigitFactorialChain(871)
+    dfc = DigitFactorialChain(871)
 
-    t.start()
-    t.join()
+    dfc.start()
+    dfc.join()
 
     expected = 2
-    result = len(DigitFactorialChain.nums_computed)
+    result = dfc.fact_chain_len
 
     assert result == expected
 
@@ -48,13 +48,13 @@ def test_3_basic():
 def test_4_basic():
     DigitFactorialChain.init_nums_computed()
 
-    t = DigitFactorialChain(871)
+    dfc = DigitFactorialChain(871)
 
-    t.start()
-    t.join()
+    dfc.start()
+    dfc.join()
 
     expected = 2
-    result = len(DigitFactorialChain.nums_computed)
+    result = dfc.fact_chain_len
 
     assert result == expected
 
