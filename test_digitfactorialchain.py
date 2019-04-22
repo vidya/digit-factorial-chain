@@ -52,7 +52,7 @@ def test_5_basic():
 
     max_num = 1000000
 
-    ThreadCompute().thread_compute(max_num)
+    ThreadCompute().use_worker_threads(max_num)
 
     len_count_60 = DigitFactorialChain.len_60_count
     expected = 402

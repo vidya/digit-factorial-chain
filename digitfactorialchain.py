@@ -1,3 +1,7 @@
+import threading
+from threading import Thread
+import queue
+
 """
 Problem Description
 https://projecteuler.net/problem=74
@@ -39,8 +43,6 @@ non-repeating terms?
 """
     Answer = 402
 """
-import threading
-from threading import Thread
 
 
 class DigitFactorialChain(Thread):
@@ -67,7 +69,6 @@ class DigitFactorialChain(Thread):
 
     num_str_fact_sum = {}
     num_fact_sum = []
-
 
     @classmethod
     def init_shared_area(cls):
@@ -125,25 +126,42 @@ class DigitFactorialChain(Thread):
 
 
 class ThreadCompute:
+    q = queue.Queue()
+
     @staticmethod
-    def thread_compute(max_num):
-        max_threads = 20
+    def worker():
+        q = ThreadCompute.q
+        while True:
+            num = q.get()
+            if num is None:
+                break
 
-        num = 0
-        while num in range(max_num):
-            threads = []
-            thread_count = 0
-            while thread_count < max_threads:
-                if num not in DigitFactorialChain.nums_computed:
-                    t = DigitFactorialChain(num)
+            DigitFactorialChain(num).calc_fact_chain_len()
+            q.task_done()
 
-                    t.start()
-                    threads.append(t)
-                    thread_count += 1
+    @staticmethod
+    def use_worker_threads(max_num):
+        thread_count = 20
+        threads = [threading.Thread(target=ThreadCompute.worker)
+                   for _ in range(thread_count)]
 
-                num += 1
+        for t in threads:
+            t.start()
 
-            for t in threads:
-                t.join()
+        q = ThreadCompute.q
+        for num in range(max_num):
+            q.put(num)
+
+        # block until all numbers have been retrieved from
+        # the queue and processed
+        q.join()
+
+        # stop workers
+        for i in range(thread_count):
+            q.put(None)
+
+        # wait for all the threads to run to completion
+        for t in threads:
+            t.join()
 
 
