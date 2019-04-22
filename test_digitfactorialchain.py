@@ -3,68 +3,56 @@ from digitfactorialchain.digitfactorialchain import ThreadCompute
 
 
 def test_1_basic():
-    DigitFactorialChain.init_nums_computed()
+    DigitFactorialChain.init_shared_area()
 
     dfc = DigitFactorialChain(169)
 
-    dfc.start()
-    dfc.join()
-
     expected = 3
-    result = dfc.fact_chain_len
+    result = dfc.calc_fact_chain_len()
 
     assert result == expected
 
 
 def test_2_basic():
-    DigitFactorialChain.init_nums_computed()
+    DigitFactorialChain.init_shared_area()
 
     dfc = DigitFactorialChain(69)
 
-    dfc.start()
-    dfc.join()
-
     expected = 5
-    result = dfc.fact_chain_len
+    result = dfc.calc_fact_chain_len()
 
     assert result == expected
     assert True
 
 
 def test_3_basic():
-    DigitFactorialChain.init_nums_computed()
+    DigitFactorialChain.init_shared_area()
 
     dfc = DigitFactorialChain(871)
 
-    dfc.start()
-    dfc.join()
-
     expected = 2
-    result = dfc.fact_chain_len
+    result = dfc.calc_fact_chain_len()
 
     assert result == expected
 
 
 def test_4_basic():
-    DigitFactorialChain.init_nums_computed()
+    DigitFactorialChain.init_shared_area()
 
-    dfc = DigitFactorialChain(871)
-
-    dfc.start()
-    dfc.join()
+    dfc = DigitFactorialChain(872)
 
     expected = 2
-    result = dfc.fact_chain_len
+    result = dfc.calc_fact_chain_len()
 
     assert result == expected
 
 
 def test_5_basic():
-    DigitFactorialChain.init_nums_computed()
+    DigitFactorialChain.init_shared_area()
 
     max_num = 1000000
 
-    ThreadCompute(max_num).thread_compute()
+    ThreadCompute().thread_compute(max_num)
 
     len_count_60 = DigitFactorialChain.len_60_count
     expected = 402

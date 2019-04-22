@@ -47,7 +47,7 @@ class DigitFactorialChain(Thread):
     nums_computed = {}
     len_60_count = 0
 
-    threading_lock = threading.Lock()
+    shared_area_lock = threading.Lock()
 
     digit_facts = [
         1,
@@ -65,80 +65,85 @@ class DigitFactorialChain(Thread):
         1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9,
     ]
 
+    num_str_fact_sum = {}
+    num_fact_sum = []
+
+
     @classmethod
-    def init_nums_computed(cls):
+    def init_shared_area(cls):
         cls.nums_computed = {}
         cls.len_60_count = 0
+
+        for n in range(1000):
+            s = sum([cls.digit_facts[int(d)]
+                     for d in str(n)])
+            cls.num_fact_sum.append(s)
+
+        for n in range(1000):
+            ns = "%03d" % n
+            cls.num_str_fact_sum[n] = sum([cls.digit_facts[int(d)]
+                                           for d in ns])
+
+    @classmethod
+    def update_shared_area(cls, fact_sum_chain):
+        cls.shared_area_lock.acquire()
+
+        for n in fact_sum_chain:
+            cls.nums_computed[n] = True
+
+        if len(fact_sum_chain) == 60:
+            cls.len_60_count += 1
+
+        cls.shared_area_lock.release()
 
     def __init__(self, start_num):
         super(DigitFactorialChain, self).__init__()
         self.daemon = True
         self.cancelled = False
 
-        self.snum = start_num
-        self.factorial_chain = []
+        self.start_num = start_num
 
     def digit_fact_sum(self, num):
-        return sum([self.digit_facts[int(d)] for d in str(num)])
+        if num < 1000:
+            return self.num_fact_sum[num]
 
-    @property
-    def fact_chain_len(self):
-        cls = self.__class__
+        n1, n2 = divmod(num, 1000)
+        return self.num_fact_sum[n1] + self.num_str_fact_sum[n2]
 
-        if self.snum in cls.nums_computed:
-            return cls.nums_computed[self.snum]
+    def calc_fact_chain_len(self):
+        fc = {}
+        num = self.start_num
+        while num not in fc:
+            fc[num] = True
+            num = self.digit_fact_sum(num)
 
-        fc = [self.snum]
-        while True:
-            dfs_num = self.digit_fact_sum(fc[-1])
-            if dfs_num in fc:
-                break
-
-            fc.append(dfs_num)
-
-        self.factorial_chain = fc
-        len_fc = len(fc)
-
-        cls.threading_lock.acquire()
-        for n in fc:
-            cls.nums_computed[n] = len_fc
-
-        if len_fc == 60:
-            cls.len_60_count += 1
-        cls.threading_lock.release()
-
-        return len_fc
+        self.__class__.update_shared_area(fc)
+        return len(fc)
 
     def run(self):
-        cls = self.__class__
-
-        if not self.snum in cls.nums_computed:
-            cls.nums_computed[self.snum] = self.fact_chain_len
-
-        return cls.nums_computed[self.snum]
+        self.calc_fact_chain_len()
 
 
 class ThreadCompute:
-    def __init__(self, max_num):
-        self.max_num = max_num
-
     @staticmethod
-    def thread_compute():
-        snum = 0
-        max_num = 1000000
-        max_threads = 1000
+    def thread_compute(max_num):
+        max_threads = 20
 
-        while snum in range(max_num):
+        num = 0
+        while num in range(max_num):
             threads = []
+            thread_count = 0
+            while thread_count < max_threads:
+                if num not in DigitFactorialChain.nums_computed:
+                    t = DigitFactorialChain(num)
 
-            for n in range(max_threads):
-                t = DigitFactorialChain(snum)
+                    t.start()
+                    threads.append(t)
+                    thread_count += 1
 
-                t.start()
-                threads.append(t)
-
-                snum += 1
+                num += 1
 
             for t in threads:
                 t.join()
+
 
