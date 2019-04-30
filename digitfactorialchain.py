@@ -103,15 +103,11 @@ class DigitFactorialChain(Thread):
     #   taking factorial sums
     @classmethod
     def update_shared_area(cls, fact_sum_chain):
-        cls.shared_area_lock.acquire()
+        with cls.shared_area_lock:
+            cls.fact_sums_computed = [True for _ in fact_sum_chain]
 
-        for n in fact_sum_chain:
-            cls.fact_sums_computed[n] = True
-
-        if len(fact_sum_chain) == 60:
-            cls.chain_len_60_count += 1
-
-        cls.shared_area_lock.release()
+            if len(fact_sum_chain) == 60:
+                cls.chain_len_60_count += 1
 
     def __init__(self, start_num):
         super(DigitFactorialChain, self).__init__()
@@ -133,14 +129,18 @@ class DigitFactorialChain(Thread):
 
     # compute the factorial sum chain of start_num
     def fact_sum_chain(self):
-        fc = []
+        chain = []
+
         num = self.start_num
-        while num not in fc:
-            fc.append(num)
+        while num not in chain:
+            chain.append(num)
             num = self.digits_fact_sum(num)
 
-        self.__class__.update_shared_area(fc)
-        return fc
+        self.__class__.update_shared_area(chain)
+        return chain
+
+    def fact_sum_chain_len(self):
+        return len(self.fact_sum_chain())
 
     def run(self):
         self.fact_sum_chain_len()

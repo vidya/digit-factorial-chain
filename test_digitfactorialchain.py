@@ -8,7 +8,7 @@ def test_1_basic():
     dfc = DigitFactorialChain(169)
 
     expected = 3
-    result = len(dfc.fact_sum_chain())
+    result = dfc.fact_sum_chain_len()
 
     assert result == expected
 
@@ -19,7 +19,7 @@ def test_2_basic():
     dfc = DigitFactorialChain(69)
 
     expected = 5
-    result = len(dfc.fact_sum_chain())
+    result = dfc.fact_sum_chain_len()
 
     assert result == expected
     assert True
@@ -31,7 +31,7 @@ def test_3_basic():
     dfc = DigitFactorialChain(871)
 
     expected = 2
-    result = len(dfc.fact_sum_chain())
+    result = dfc.fact_sum_chain_len()
 
     assert result == expected
 
@@ -42,7 +42,7 @@ def test_4_basic():
     dfc = DigitFactorialChain(872)
 
     expected = 2
-    result = len(dfc.fact_sum_chain())
+    result = dfc.fact_sum_chain_len()
 
     assert result == expected
 
