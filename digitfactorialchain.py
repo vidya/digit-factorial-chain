@@ -44,13 +44,17 @@ non-repeating terms?
     Answer = 402
 """
 
-
+# subclass from Thread class
 class DigitFactorialChain(Thread):
-    nums_computed = {}
-    len_60_count = 0
+    # store the numbers whose factorial sums have been computed
+    fact_sums_computed = {}
+
+    # count numbers whose factorial sum chains have length 60
+    chain_len_60_count = 0
 
     shared_area_lock = threading.Lock()
 
+    # factorials of single digit numbers
     digit_facts = [
         1,
 
@@ -67,88 +71,108 @@ class DigitFactorialChain(Thread):
         1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9,
     ]
 
-    num_str_fact_sum = {}
-    num_fact_sum = []
+    # store sums of factorials of digits for numbers < 1000
+    # as a list
+    onek_fact_sum = []
+
+    # store sums of factorials of digits for numbers < 1000
+    # as a dictionary with
+    #
+    #   (key=three_digit_string, value=sum_of_factorials_of_digits)
+    #
+    onek_str_fact_sum = {}
 
     @classmethod
     def init_shared_area(cls):
-        cls.nums_computed = {}
-        cls.len_60_count = 0
+        cls.fact_sums_computed = {}
+        cls.chain_len_60_count = 0
 
         for n in range(1000):
             s = sum([cls.digit_facts[int(d)]
                      for d in str(n)])
-            cls.num_fact_sum.append(s)
+
+            cls.onek_fact_sum.append(s)
 
         for n in range(1000):
             ns = "%03d" % n
-            cls.num_str_fact_sum[n] = sum([cls.digit_facts[int(d)]
-                                           for d in ns])
+            cls.onek_str_fact_sum[n] = sum([cls.digit_facts[int(d)]
+                                            for d in ns])
 
+    # fact_sum_chain:
+    #   chain of numbers obtained by repeatedly
+    #   taking factorial sums
     @classmethod
     def update_shared_area(cls, fact_sum_chain):
         cls.shared_area_lock.acquire()
 
         for n in fact_sum_chain:
-            cls.nums_computed[n] = True
+            cls.fact_sums_computed[n] = True
 
         if len(fact_sum_chain) == 60:
-            cls.len_60_count += 1
+            cls.chain_len_60_count += 1
 
         cls.shared_area_lock.release()
 
     def __init__(self, start_num):
         super(DigitFactorialChain, self).__init__()
+
+        # make this a daemon thread, which will be automatically
+        # killed when the main thread exits
         self.daemon = True
         self.cancelled = False
 
         self.start_num = start_num
 
-    def digit_fact_sum(self, num):
+    # calculate the sum of factorials of digits of num
+    def digits_fact_sum(self, num):
         if num < 1000:
-            return self.num_fact_sum[num]
+            return self.onek_fact_sum[num]
 
-        n1, n2 = divmod(num, 1000)
-        return self.num_fact_sum[n1] + self.num_str_fact_sum[n2]
+        q, r = divmod(num, 1000)
+        return self.onek_fact_sum[q] + self.onek_str_fact_sum[r]
 
-    def calc_fact_chain_len(self):
-        fc = {}
+    # compute the factorial sum chain of start_num
+    def fact_sum_chain(self):
+        fc = []
         num = self.start_num
         while num not in fc:
-            fc[num] = True
-            num = self.digit_fact_sum(num)
+            fc.append(num)
+            num = self.digits_fact_sum(num)
 
         self.__class__.update_shared_area(fc)
-        return len(fc)
+        return fc
 
     def run(self):
-        self.calc_fact_chain_len()
+        self.fact_sum_chain_len()
 
 
 class ThreadCompute:
-    q = queue.Queue()
+    compute_fact_sum_q = queue.Queue()
 
     @staticmethod
     def worker():
-        q = ThreadCompute.q
+        q = ThreadCompute.compute_fact_sum_q
         while True:
             num = q.get()
             if num is None:
                 break
 
-            DigitFactorialChain(num).calc_fact_chain_len()
+            DigitFactorialChain(num).fact_sum_chain()
             q.task_done()
 
     @staticmethod
     def use_worker_threads(max_num):
+        # create twenty threads
         thread_count = 20
         threads = [threading.Thread(target=ThreadCompute.worker)
                    for _ in range(thread_count)]
 
+        # start the threads
         for t in threads:
             t.start()
 
-        q = ThreadCompute.q
+        # enters numbers into the compute queue
+        q = ThreadCompute.compute_fact_sum_q
         for num in range(max_num):
             q.put(num)
 
@@ -163,5 +187,4 @@ class ThreadCompute:
         # wait for all the threads to run to completion
         for t in threads:
             t.join()
-
 
