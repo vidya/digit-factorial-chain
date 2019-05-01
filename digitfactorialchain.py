@@ -84,33 +84,6 @@ class DigitFactorialChain(Thread):
     #
     onek_str_fact_sum = {}
 
-    @classmethod
-    def init_shared_area(cls):
-        cls.fact_sums_computed = {}
-        cls.chain_len_60_count = 0
-
-        for n in range(1000):
-            s = sum([cls.digit_facts[int(d)]
-                     for d in str(n)])
-
-            cls.onek_fact_sum.append(s)
-
-        for n in range(1000):
-            ns = "%03d" % n
-            cls.onek_str_fact_sum[n] = sum([cls.digit_facts[int(d)]
-                                            for d in ns])
-
-    # fact_sum_chain:
-    #   chain of numbers obtained by repeatedly
-    #   taking factorial sums
-    @classmethod
-    def update_shared_area(cls, fact_sum_chain):
-        with cls.shared_area_lock:
-            cls.fact_sums_computed = [True for _ in fact_sum_chain]
-
-            if len(fact_sum_chain) == 60:
-                cls.chain_len_60_count += 1
-
     def __init__(self, start_num):
         super(DigitFactorialChain, self).__init__()
 
@@ -146,6 +119,33 @@ class DigitFactorialChain(Thread):
 
     def run(self):
         self.fact_sum_chain_len()
+
+    @classmethod
+    def init_shared_area(cls):
+        cls.fact_sums_computed = {}
+        cls.chain_len_60_count = 0
+
+        for n in range(1000):
+            s = sum([cls.digit_facts[int(d)]
+                     for d in str(n)])
+
+            cls.onek_fact_sum.append(s)
+
+        for n in range(1000):
+            ns = "%03d" % n
+            cls.onek_str_fact_sum[n] = sum([cls.digit_facts[int(d)]
+                                            for d in ns])
+
+    # fact_sum_chain:
+    #   chain of numbers obtained by repeatedly
+    #   taking factorial sums
+    @classmethod
+    def update_shared_area(cls, fact_sum_chain):
+        with cls.shared_area_lock:
+            cls.fact_sums_computed = [True for _ in fact_sum_chain]
+
+            if len(fact_sum_chain) == 60:
+                cls.chain_len_60_count += 1
 
     @classmethod
     def worker(cls):
