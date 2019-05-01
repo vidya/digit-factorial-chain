@@ -1,5 +1,4 @@
 from digitfactorialchain.digitfactorialchain import DigitFactorialChain
-from digitfactorialchain.digitfactorialchain import ThreadCompute
 
 
 def test_1_basic():
@@ -48,16 +47,12 @@ def test_4_basic():
 
 
 def test_5_basic():
-    DigitFactorialChain.init_shared_area()
-
     max_num = 1000000
 
-    ThreadCompute().use_worker_threads(max_num)
-
-    len_count_60 = DigitFactorialChain.chain_len_60_count
+    result = DigitFactorialChain.use_worker_threads(max_num)
     expected = 402
 
-    print("(max_num, len_count_60) = ({}, {})".format(max_num, len_count_60))
+    print("(max_num, result) = ({}, {})".format(max_num, result))
 
-    assert len_count_60 == expected
+    assert result == expected
 

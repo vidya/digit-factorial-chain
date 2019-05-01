@@ -46,6 +46,8 @@ non-repeating terms?
 
 # subclass from Thread class
 class DigitFactorialChain(Thread):
+    compute_fact_sum_q = queue.Queue()
+
     # store the numbers whose factorial sums have been computed
     fact_sums_computed = {}
 
@@ -145,13 +147,9 @@ class DigitFactorialChain(Thread):
     def run(self):
         self.fact_sum_chain_len()
 
-
-class ThreadCompute:
-    compute_fact_sum_q = queue.Queue()
-
-    @staticmethod
-    def worker():
-        q = ThreadCompute.compute_fact_sum_q
+    @classmethod
+    def worker(cls):
+        q = cls.compute_fact_sum_q
         while True:
             num = q.get()
             if num is None:
@@ -160,11 +158,13 @@ class ThreadCompute:
             DigitFactorialChain(num).fact_sum_chain()
             q.task_done()
 
-    @staticmethod
-    def use_worker_threads(max_num):
+    @classmethod
+    def use_worker_threads(cls, max_num):
+        cls.init_shared_area()
+
         # create twenty threads
         thread_count = 20
-        threads = [threading.Thread(target=ThreadCompute.worker)
+        threads = [threading.Thread(target=cls.worker)
                    for _ in range(thread_count)]
 
         # start the threads
@@ -172,19 +172,20 @@ class ThreadCompute:
             t.start()
 
         # enters numbers into the compute queue
-        q = ThreadCompute.compute_fact_sum_q
         for num in range(max_num):
-            q.put(num)
+            cls.compute_fact_sum_q.put(num)
 
         # block until all numbers have been retrieved from
         # the queue and processed
-        q.join()
+        cls.compute_fact_sum_q.join()
 
         # stop workers
         for i in range(thread_count):
-            q.put(None)
+            cls.compute_fact_sum_q.put(None)
 
         # wait for all the threads to run to completion
         for t in threads:
             t.join()
+
+        return cls.chain_len_60_count
 
